@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Leaflet Map{% endblock title %}</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static './favicon/favicon_16x16.png' %}"
+    />
+    {% block custom_leaflet_css %}
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <!-- Custom Leaflet -->
+    <link rel="stylesheet" href="{% static 'css/leaflet_map/real_estate.css' %}" 
+    />
+    <link rel="stylesheet" href="{% static 'css/leaflet_map/Control.FullScreen.css'%}" />
+    <!-- Geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <!-- Geosearch -->
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.css"
+    />
+    <!-- Autocomplete -->
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/tomik23/autocomplete@1.7.3/dist/css/autocomplete.min.css"
+    />
+    <!-- Locate -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.76.0/L.Control.Locate.css" integrity="sha512-tHOsa8kiuv4rDFZBA1N5a3WkEkWii7/PPVjQDQrOVx7UlvFO0bCILxkfjDT8eAjKD91QJ9jBTMiebey2ELOoDQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Jquery UI -->
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css"
+        rel="stylesheet" type="text/css" />  
+   <style>
+    .leaflet-control-geocoder-form input{
+        width: 500px !important;
+     }
+
+   </style>
+
+
+
+    {% endblock custom_leaflet_css %}
+</head>
+<body>
+    {% block content %} 
+    <div id="map"> 
+        
+    </div>{% endblock content %}
+
+
+
+
+    {% block custom_leaflet_js %}
+    <!-- Jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <!-- MDB -->
+    <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js"
+    ></script>
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>  
+    <!-- Geosearch -->
+    <!-- Make sure you put this AFtER leaflet.js, when using with leaflet -->
+    <script src="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
+    <script src="{% static 'js/leaflet_map/Control.FullScreen.js'%}"></script>   
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    {% comment %} <script src="https://cdn.jsdelivr.net/gh/tomik23/autocomplete@1.7.3/dist/js/autocomplete.min.js"></script> {% endcomment %}
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.74.0/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <!-- Jquery autocomplete -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js">  
+    </script>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js">  
+    </script>  
+    <script>
+    window.addEventListener('load', () => {
+        function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+        }
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+        function highlightFeature(e) {
+            var layer = e.target;
+        
+            layer.setStyle({
+                weight: 5,
+                color: '#666',
+                dashArray: '',
+                fillOpacity: 0.7
+            });
+        
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+        
+            info.update(layer.feature.properties);
+        }
+        function resetHighlight(e) {
+            geojson.resetStyle(e.target);
+            info.update();
+        }
+
+
+        const vinUni = [20.98856915, 105.9459336782822];
+        var map = L.map('map', {
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+              position: 'topleft'
+            }
+          });
+        map.setView(vinUni, 15);
+
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        L.control.locate().addTo(map);
+        L.control.scale().addTo(map);
+        // L.Control.geocoder().addTo(map);
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false
+          })
+            .on('markgeocode', function(e) {
+              var bbox = e.geocode.bbox;
+              var poly = L.polygon([
+                bbox.getSouthEast(),
+                bbox.getNorthEast(),
+                bbox.getNorthWest(),
+                bbox.getSouthWest()
+              ]).addTo(map);
+              map.fitBounds(poly.getBounds());
+            })
+            .addTo(map);
+        
+        /*
+        axios.get('http://127.0.0.1:8000/api/real-estate/apartment-sale-hanoi/')
+            .then(response => {
+                console.log(response.data.slice(0, 10));
+            })
+            .catch(error => console.log(error));
+        */
+        /*
+        var vinUniMarker = L.marker(vinUni).addTo(map);
+        vinUniMarker.bindPopup("<b>Hello!</b><br>I am VinUni").openPopup();
+        */
+        
+        var addresses = [
+        {% for address in addresses %}
+            "{{ address }}",
+        {% endfor %}
+        ];
+        // console.log(addresses)
+        $(".leaflet-control-geocoder-form input").autocomplete({
+        source: addresses,
+        select: function( event, ui ) {
+            var value = ui.item.value;
+            // alert(value);
+            const params = new URLSearchParams();
+            params.append('address', value);
+            
+            console.log(params)
+            axios.get('http://127.0.0.1:8000/api/real-estate/apartment-sale-hanoi/', {params})
+            .then(response => {
+                console.log("address: " + response.data.address);
+                console.log("latitude: " + response.data.latitude);
+                console.log("longitude: " + response.data.longitude);
+                console.log("price_by_area: " + response.data.price_by_area);
+                var lat = response.data.latitude
+                var lng = response.data.longitude
+                const selected_coordinates = [lat, lng]
+                var selected_marker = L.marker(selected_coordinates).addTo(map);
+                popup_message = 
+                `<b>${response.data.address}<br></b>` + 
+                `Coordinates: ${lat}, ${lng}<br>` +
+                `Price by area: ${response.data.price_by_area.toLocaleString('en-US')}<br>`;
+                popup_form = `
+                <form id="popup-form" method="post">    
+                    {% csrf_token %}
+                    <p>
+                        <label class="form-label" for="address">Address</label>
+                        <input type="text" name="address" id="address"/>
+                    </p>
+                    <p>
+                        <label class="form-label" for="latitude">Latitude</label>
+                        <input type="text" name="latitude" id="latitude"/>
+                    </p>
+                    <p>
+                        <label class="form-label" for="longitude">Longitude</label>
+                        <input type="text" name="longitude" id="longitude"/>
+                    </p>
+                    <p>
+                        <label class="form-label" for="direction">Direction</label>
+                        <input type="text" name="direction" id="direction"/>
+                    </p>
+                    <p>
+                        <label class="form-label" for="paper">Paper</label>
+                        <input type="text" name="paper" id="paper"/>
+                    </p>
+                    <!-- Submit button -->
+                    <p>
+                        <input type="submit" value="Submit"/>
+                    </p>
+                </form>
+                `;
+                popup_content = popup_form + popup_message;
+                selected_marker.bindPopup(popup_content).openPopup();
+                $("#popup-form").on("submit", function(e){
+                    e.preventDefault();
+                    console.log("Submitted!");
+                    
+                    var address = $("#address").val();
+                    var latitude = $("#latitude").val();
+                    var longitude = $("#longitude").val();
+                    var direction = $("#direction").val();
+                    var paper = $("#paper").val();
+                    console.log(address);
+                    console.log('lat = ' + latitude);
+                    console.log('lng = ' + longitude);
+                    console.log(direction);
+                    console.log(paper);
+        
+                    // const apartment_params = new URLSearchParams();
+                    // apartment_params.append('address', address);
+                    // apartment_params.append('latitude', latitude);
+                    // apartment_params.append('longitude', longitude);
+                    // apartment_params.append('direction', direction);
+                    // apartment_params.append('paper', paper);
+                    /*const apartment_params = {
+                        "latitude": latitude,
+                        "longitude": longitude
+                    };*/
+                    const apartment_params = new URLSearchParams();
+                    apartment_params.append('latitude', latitude);
+                    apartment_params.append('longitude', longitude);
+                    console.log(apartment_params)
+                    axios.get('http://127.0.0.1:8000/api/real-estate/apartment-sale-hanoi-price/predict', 
+                        new URLSearchParams({
+                            latitude: latitude,
+                            longitude: longitude,
+                        })
+                    )
+                    .then(response => {
+                        predict_price = response.data.predicted_price;
+                        console.log("predicted_price: " + predict_price);
+                        /*
+                        popup_content = popup_content + `<br>` + `Predicted: ` + predicted_price;
+                        selected_marker.bindPopup(popup_content).openPopup();*/
+                    })
+                    .catch(error => console.log(error));
+                    
+                });
+                map.setView(selected_coordinates, 15);
+                L.circle([lat,lng], 1000).addTo(map);
+            })
+            .catch(error => console.log(error.response.data));
+            
+        }
+
+        });
+
+        
+        
+        
+        
+        
+
+        
+        
+        
+
+
+
+
+
+        
+        
+    
+    
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    });
+
+
+    
+    </script>
+
+    {% endblock custom_leaflet_js %}
+
+</body>
+</html>

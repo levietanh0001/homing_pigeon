@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <!-- Font Awesome -->
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    rel="stylesheet"
+    />
+    <!-- MDB -->
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css"
+    rel="stylesheet"
+    />
+    <style>
+
+    </style>
+</head>
+
+<body>
+
+{% comment %} <form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Log In</button>
+</form> {% endcomment %}
+<div class="mask d-flex align-items-center h-100" style="background-color: rgba(0, 0, 0, 0.8);">
+<div class="container">
+    <div class="row justify-content-center">
+      <div class="col-xl-5 col-md-8">
+        {% comment %} action="{% url 'users:login_user' %}" {% endcomment %}
+        <form id="login-form" class="bg-white rounded-5 shadow-5-strong p-5" method="post" action="{% url 'users:login_user' %}">
+            {% csrf_token %}
+            
+          <!-- Email input -->
+          <div class="form-outline mb-4">
+            <label class="form-label" for="form1Example1">Email address</label>
+            <input type="email" name="email" id="email" class="form-control" />
+            
+          </div>
+
+          <!-- Password input -->
+          <div class="form-outline mb-4">
+            <label class="form-label" for="form1Example2">Password</label>
+            <input type="password" name="password" id="password" class="form-control" />
+            
+          </div>
+
+          <!-- 2 column grid layout for inline styling -->
+          <div class="row mb-4">
+            <div class="col d-flex justify-content-center">
+              <!-- Checkbox -->
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="form1Example3" checked />
+                <label class="form-check-label" for="form1Example3">
+                  Remember me
+                </label>
+              </div>
+            </div>
+
+            <div class="col text-center">
+              <!-- Simple link -->
+              <a href="#!">Forgot password?</a>
+            </div>
+          </div>
+
+          <!-- Submit button -->
+          {% comment %} <input type="submit" value="Submit" class="form-control" /> {% endcomment %}
+          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+          {{ message }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  /*
+window.addEventListener('load', ()=>{
+  
+  const baseURL = 'http://127.0.0.1:8000/api/';
+  const form = document.querySelector('#login-form');
+  var email = document.getElementById("email").value;
+  var password = document.getElementById("password").value;
+  form.addEventListener('submit', (e)=>{
+      //to prevent reload
+      e.preventDefault();
+      //creates a multipart/form-data object
+      let data = new FormData(form);
+      axios({
+        method  : 'post',
+        url : baseUrl + 'users/login/',
+        data : data,
+      })
+      .then((res)=>{
+        console.log(res);
+        console.log(res.data);
+        localStorage.setItem('access_token', res.data.access);
+				localStorage.setItem('refresh_token', res.data.refresh);
+        window.location('http://127.0.0.1:8000')
+      })
+      .catch((err) => {throw err});
+  });
+});
+*/
+</script>
+</body>
+</html>
